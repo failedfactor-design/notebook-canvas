@@ -65,7 +65,7 @@ async function saveSticky(item,patch){
   if(error)notify(error.message);
   else Object.assign(item,patch);
 }
-function renderCanvas(){
+async function renderCanvas(){
   const root=$("#view-content");if(!root)return;
   root.innerHTML=`<div class="board-toolbar"><div class="board-hint"><span class="board-kicker">GRID BOARD</span><span>โน้ต รูปภาพ และไฟล์ จัดเรียงเป็นช่อง ๆ ให้ดูง่าย</span></div><div class="board-actions"><span class="board-count">${state.items.length} ITEMS</span><button class="btn small" id="canvas-upload">＋ Add files</button><button class="btn small primary" id="canvas-add-note">＋ New note</button></div></div><div class="canvas-board grid-board" id="canvas-board"><div class="canvas-empty" id="canvas-empty" style="${state.items.length?"display:none":""}"><div><strong>Your board is ready.</strong><br><span>สร้างโน้ตแรก หรือเพิ่มรูปภาพและไฟล์ลงในช่องได้เลย</span></div></div><div class="canvas-plane board-grid" id="canvas-plane"></div></div>`;
   $("#canvas-upload").onclick=()=>$("#asset-input").click();
