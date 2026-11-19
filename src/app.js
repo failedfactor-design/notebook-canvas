@@ -71,6 +71,17 @@ async function renderCanvas(){
   $("#canvas-upload").onclick=()=>$("#asset-input").click();
   $("#canvas-add-note").onclick=createStickyNote;
   const plane=$("#canvas-plane");
+  const pageTile=document.createElement("article");
+  pageTile.className="page-doc-tile";
+  pageTile.innerHTML=`<div class="page-doc-head"><span>PAGE NOTE</span><span>RICH TEXT</span></div><div id="board-page-editor" class="page-doc-editor"></div>`;
+  plane.append(pageTile);
+  state.editor=new Editor({
+    element:$("#board-page-editor"),
+    extensions:[StarterKit],
+    content:state.page.content||{type:"doc",content:[{type:"paragraph"}]},
+    editorProps:{attributes:{class:"page-board-prose",spellcheck:"true"}},
+    onUpdate:({editor})=>schedulePageSave(editor.getJSON())
+  });
   const ordered=[...state.items].sort((a,b)=>(b.z_index||0)-(a.z_index||0));
   for(const item of ordered){
     const el=document.createElement("article");
