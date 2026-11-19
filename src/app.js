@@ -67,49 +67,69 @@ async function saveSticky(item,patch){
 }
 function renderCanvas(){
   const root=$("#view-content");if(!root)return;
-  root.innerHTML=`<div class="board-toolbar"><div class="board-hint"><span class="board-kicker">YOUR BOARD</span><span>วางโน้ต รูปภาพ และไฟล์ได้อย่างอิสระ ลากเพื่อจัดตำแหน่งได้เลย</span></div><div class="board-actions"><span class="board-count">${state.items.length} ITEMS</span><button class="btn small" id="fit-board">Center board</button><button class="btn small" id="canvas-upload">＋ Add files</button><button class="btn small primary" id="canvas-add-note">＋ New note</button></div></div><div class="canvas-board" id="canvas-board"><div class="canvas-empty" id="canvas-empty" style="${state.items.length?"display:none":""}"><div><strong>Your board is ready.</strong><br><span>เริ่มจากสร้างโน้ต หรือวางรูปภาพและไฟล์ลงบนบอร์ด</span></div></div><div class="canvas-plane" id="canvas-plane"></div></div>`;
+  root.innerHTML=`<div class="board-toolbar"><div class="board-hint"><span class="board-kicker">GRID BOARD</span><span>โน้ต รูปภาพ และไฟล์ จัดเรียงเป็นช่อง ๆ ให้ดูง่าย</span></div><div class="board-actions"><span class="board-count">${state.items.length} ITEMS</span><button class="btn small" id="canvas-upload">＋ Add files</button><button class="btn small primary" id="canvas-add-note">＋ New note</button></div></div><div class="canvas-board grid-board" id="canvas-board"><div class="canvas-empty" id="canvas-empty" style="${state.items.length?"display:none":""}"><div><strong>Your board is ready.</strong><br><span>สร้างโน้ตแรก หรือเพิ่มรูปภาพและไฟล์ลงในช่องได้เลย</span></div></div><div class="canvas-plane board-grid" id="canvas-plane"></div></div>`;
   $("#canvas-upload").onclick=()=>$("#asset-input").click();
   $("#canvas-add-note").onclick=createStickyNote;
-  $("#fit-board").onclick=()=>$("#canvas-board").scrollTo({left:0,top:0,behavior:"smooth"});
   const plane=$("#canvas-plane");
-  for(const item of state.items){
-    const p=item.position||{x:80,y:80,width:320,height:220};
-    const el=document.createElement("div");
-    el.className="asset"+(item.kind==="sticky"?" sticky-asset":"")+(item.id===state.selected?" selected":"");
+  const ordered=[...state.items].sort((a,b)=>(b.z_index||0)-(a.z_index||0));
+  for(const item of ordered){
+    const el=document.createElement("article");
+    const type=item.kind==="sticky"?"tile-note":item.kind==="image"?"tile-image":item.kind==="pdf"?"tile-pdf":"tile-file";
+    el.className="asset grid-tile "+type+(item.id===state.selected?" selected":"");
     el.dataset.id=item.id;
-    el.style.cssText=`left:${p.x||0}px;top:${p.y||0}px;width:${p.width||320}px;height:${p.height||220}px;transform:rotate(${item.rotation||0}deg);z-index:${item.z_index||1}`;
     let inside="";
     if(item.kind==="sticky"){
       const tone=["violet","graphite","slate"].includes(item.metadata?.tone)?item.metadata.tone:"graphite";
       inside=`<div class="sticky-note tone-${tone}"><div class="sticky-cap"><span>NOTE / ${String(item.id).slice(0,4).toUpperCase()}</span><span class="sticky-cap-dot"></span></div><input class="sticky-title" aria-label="Note title" maxlength="120" value="${esc(item.title||"Untitled note")}" /><textarea class="sticky-content" aria-label="Note content" placeholder="เขียนไอเดียของคุณตรงนี้...">${esc(item.metadata?.body||"")}</textarea><div class="sticky-foot"><span>QUICK NOTE</span><span>PRIVATE</span></div></div>`;
     }else if(item.kind==="image"){
-      try{inside=`<img alt="${esc(item.title)}" src="${await signedUrl(item.storage_path)}" draggable="false">`;}
-      catch{inside='<div class="asset-file">Image unavailable</div>';}
-    }else if(item.kind==="pdf"){
-      inside=`<div class="asset-file"><div class="file-icon">▤</div><strong>${esc(item.title)}</strong><small>PDF DOCUMENT</small></div>`;
+      let url="";
+      try{url=await signedUrl(item.storage_path);}catch{}
+      inside=`<div class="tile-media">${url?`<img alt="${esc(item.title)}" src="${url}" draggable="false">`:'<div class="tile-file-icon">▧</div>'}</div><div class="tile-meta"><strong>${esc(item.title||"Image")}</strong><span>IMAGE</span></div>`;
     }else{
-      inside=`<div class="asset-file"><div class="file-icon">↧</div><strong>${esc(item.title)}</strong><small>${esc(item.metadata?.sizeLabel||"FILE")}</small></div>`;
+      const label=item.kind==="pdf"?"PDF DOCUMENT":(item.metadata?.sizeLabel||"FILE");
+      const symbol=item.kind==="pdf"?"▤":"↧";
+      inside=`<div class="tile-file-body"><div class="tile-file-icon">${symbol}</div><strong>${esc(item.title||"Untitled file")}</strong><small>${esc(label)}</small></div><div class="tile-meta"><strong>${esc(item.title||"Untitled file")}</strong><span>${item.kind==="pdf"?"PDF":"FILE"}</span></div>`;
     }
-    el.innerHTML=`${inside}<div class="asset-controls"><button data-act="rotate" title="Rotate">↻</button><button data-act="front" title="Bring forward">＋</button><button data-act="back" title="Send backward">－</button><button data-act="delete" title="Delete">×</button></div><div class="resize-handle"></div>`;
+    el.innerHTML=`${inside}<div class="asset-controls"><button data-act="front" title="Move to beginning">↑</button><button data-act="back" title="Move to end">↓</button><button data-act="delete" title="Delete">×</button></div>`;
     plane.append(el);
     if(item.kind==="sticky"){
       const title=el.querySelector(".sticky-title"),body=el.querySelector(".sticky-content");
       title.onchange=async()=>{item.title=title.value.trim()||"Untitled note";await saveSticky(item,{title:item.title});};
       body.onchange=async()=>{const metadata={...(item.metadata||{}),body:body.value};await saveSticky(item,{metadata});};
       title.onfocus=body.onfocus=()=>{state.selected=item.id;el.classList.add("selected");};
+      title.onblur=()=>el.classList.remove("selected");
+      body.onblur=()=>el.classList.remove("selected");
     }
     wireAsset(el,item);
   }
   const board=$("#canvas-board");
-  board.ondragover=e=>{e.preventDefault();board.classList.add("drag-over");};
+  board.ondragover=e=>{if(e.dataTransfer?.types?.includes("Files")){e.preventDefault();board.classList.add("drag-over");}};
   board.ondragleave=()=>board.classList.remove("drag-over");
-  board.ondrop=async e=>{e.preventDefault();board.classList.remove("drag-over");if(e.dataTransfer.files.length)await uploadFiles(e.dataTransfer.files,20,20);};
-  board.onclick=e=>{if(e.target===board||e.target.id==="canvas-plane"){state.selected=null;renderCanvas();}};
+  board.ondrop=async e=>{e.preventDefault();board.classList.remove("drag-over");if(e.dataTransfer.files.length)await uploadFiles(e.dataTransfer.files);};
 }
 function wireAsset(el,item){
-  el.onpointerdown=e=>{if(e.target.closest("button,input,textarea")||e.target.classList.contains("resize-handle"))return;state.selected=item.id;el.classList.add("selected");el.style.zIndex="9999";const startX=e.clientX,startY=e.clientY,p={...(item.position||{})};el.setPointerCapture(e.pointerId);const move=ev=>{const zoom=1;el.style.left=(p.x+ev.clientX-startX)/zoom+"px";el.style.top=(p.y+ev.clientY-startY)/zoom+"px";};const up=async ev=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);const pos={...p,x:Math.max(0,(p.x||0)+ev.clientX-startX),y:Math.max(0,(p.y||0)+ev.clientY-startY)};item.position=pos;await saveCanvasItem(item.id,{position:pos});};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);};
-  el.querySelector(".resize-handle").onpointerdown=e=>{e.stopPropagation();e.preventDefault();state.selected=item.id;const sx=e.clientX,sy=e.clientY,p={...(item.position||{})};el.setPointerCapture(e.pointerId);const move=ev=>{el.style.width=Math.max(120,(p.width||320)+ev.clientX-sx)+"px";el.style.height=Math.max(100,(p.height||220)+ev.clientY-sy)+"px";};const up=async ev=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);const pos={...p,width:Math.max(120,(p.width||320)+ev.clientX-sx),height:Math.max(100,(p.height||220)+ev.clientY-sy)};item.position=pos;await saveCanvasItem(item.id,{position:pos});};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);};
-  el.querySelectorAll("[data-act]").forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const act=btn.dataset.act;if(act==="delete"){const ok=confirm("Remove this item from the canvas?");if(!ok)return;if(item.storage_path)await supabase.storage.from("notebook-assets").remove([item.storage_path]);await supabase.from("canvas_items").delete().eq("id",item.id);state.items=state.items.filter(i=>i.id!==item.id);state.selected=null;renderCanvas();}else if(act==="rotate"){item.rotation=((Number(item.rotation)||0)+15)%360;await saveCanvasItem(item.id,{rotation:item.rotation});renderCanvas();}else{const max=Math.max(0,...state.items.map(i=>i.z_index||0));item.z_index=act==="front"?max+1:Math.min(0,...state.items.map(i=>i.z_index||0))-1;await saveCanvasItem(item.id,{z_index:item.z_index});renderCanvas();}});
+  el.querySelectorAll("[data-act]").forEach(btn=>btn.onclick=async e=>{
+    e.stopPropagation();
+    const act=btn.dataset.act;
+    if(act==="delete"){
+      if(!confirm("Remove this item from the board?"))return;
+      if(item.storage_path)await supabase.storage.from("notebook-assets").remove([item.storage_path]);
+      const {error}=await supabase.from("canvas_items").delete().eq("id",item.id).eq("owner_id",state.user.id);
+      if(error){notify(error.message);return;}
+      state.items=state.items.filter(i=>i.id!==item.id);state.selected=null;renderCanvas();
+    }else{
+      const sorted=[...state.items].sort((a,b)=>(a.z_index||0)-(b.z_index||0));
+      const index=sorted.findIndex(i=>i.id===item.id);
+      const target=act==="front"?sorted.length-1:0;
+      if(index===target)return;
+      sorted.splice(index,1);
+      if(act==="front")sorted.push(item);else sorted.unshift(item);
+      for(let i=0;i<sorted.length;i++){sorted[i].z_index=i+1;}
+      const {error}=await supabase.from("canvas_items").upsert(sorted.map(i=>({id:i.id,owner_id:state.user.id,z_index:i.z_index})),{onConflict:"id"});
+      if(error){notify(error.message);return;}
+      state.items=sorted;renderCanvas();
+    }
+  });
 }
 async function uploadFiles(fileList,startX=70,startY=70){const files=[...fileList];if(!files.length)return;let offset=0;for(const file of files){try{if(file.size>50*1024*1024)throw new Error(`${file.name} exceeds the 50 MB limit`);const ext=file.name.split(".").pop()?.toLowerCase();const kind=file.type.startsWith("image/")?"image":file.type==="application/pdf"||ext==="pdf"?"pdf":"file";const clean=file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,100);const path=`${state.user.id}/${state.activeNotebook.id}/${crypto.randomUUID()}-${clean}`;const {error:uploadError}=await supabase.storage.from("notebook-assets").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});if(uploadError)throw uploadError;const {data,error}=await supabase.from("canvas_items").insert({page_id:state.page.id,owner_id:state.user.id,kind,title:file.name,storage_path:path,position:{x:startX+offset*26,y:startY+offset*26,width:kind==="image"?300:260,height:kind==="image"?220:165},metadata:{mimeType:file.type,size:file.size,sizeLabel:formatBytes(file.size)}}).select().single();if(error){await supabase.storage.from("notebook-assets").remove([path]);throw error;}state.items.push(data);offset++;}catch(err){notify(err.message||"Upload failed");}}state.view="canvas";const tab=$('[data-view="canvas"]');$$(".view-tab").forEach(t=>t.classList.toggle("active",t.dataset.view==="canvas"));renderView();}
 function formatBytes(bytes){if(bytes<1024)return bytes+" B";if(bytes<1048576)return (bytes/1024).toFixed(1)+" KB";return (bytes/1048576).toFixed(1)+" MB";}
