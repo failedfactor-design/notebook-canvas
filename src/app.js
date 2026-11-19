@@ -5,7 +5,7 @@ import StarterKit from "https://esm.sh/@tiptap/starter-kit@3.34.0";
 const $ = (s, root=document) => root.querySelector(s);
 const esc = (value="") => String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const icon = (symbol) => symbol;
-const state = { user:null, notebooks:[], activeNotebook:null, pages:[], page:null, items:[], view:"notebook", editor:null, selected:null, saveTimer:null, saveTimers:new Map(), theme:"graphite", settingsOpen:false, signedUrls:new Map() };
+const state = { user:null, notebooks:[], activeNotebook:null, pages:[], page:null, items:[], view:"canvas", editor:null, selected:null, saveTimer:null, saveTimers:new Map(), theme:"graphite", settingsOpen:false, signedUrls:new Map() };
 const themes = [
   ["graphite","Graphite","#41464e"],["charcoal","Charcoal","#191b1e"],["midnight","Midnight","#202d3c"],["fog","Fog","#777e86"],["paper","Paper","#f0f0eb"]
 ];
@@ -29,7 +29,7 @@ async function createPage(){if(!state.activeNotebook)return;const {data,error}=a
 function renderApp(){
   state.editor?.destroy();state.editor=null;
   const notebook=state.activeNotebook,page=state.page;
-  $("#app").innerHTML=`<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">N</div><div><div class="brand-name">Notebook Canvas</div><div class="brand-sub">YOUR DIGITAL SPACE</div></div></div><div class="side-actions"><button class="btn small primary" id="new-note">＋ <span>New</span></button><button class="btn small" id="new-page">▤ <span>Page</span></button></div><input class="search" id="search-notes" placeholder="⌕  Search notebooks…" /><div class="side-label">YOUR NOTEBOOKS</div><div class="note-list" id="note-list"></div><div class="side-bottom"><div class="avatar">${esc((state.user.email||"N").slice(0,1).toUpperCase())}</div><div class="user-meta"><div style="font-size:12px;font-weight:600">Your workspace</div><div class="user-email">${esc(state.user.email)}</div></div><button class="btn icon ghost" id="settings" title="Appearance">⚙</button><button class="btn icon ghost" id="sign-out" title="Sign out">↗</button></div></aside><main class="main"><header class="topbar"><div class="breadcrumbs"><span>Workspace</span><span>／</span><span class="crumb-title">${esc(notebook.title)}</span><span>／</span><span>${esc(page.title)}</span></div><span class="save-status" id="save-status">All changes saved</span><div class="top-actions"><button class="btn small optional" id="rename-note">Rename</button><button class="btn small" id="open-settings">◐ Theme</button><button class="btn small primary" id="add-assets">＋ Add files</button><input id="asset-input" type="file" multiple hidden accept="image/*,.pdf,.txt,.md,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" /></div></header><section class="workspace"><div class="page-head"><div class="page-kicker">NOTEBOOK / ${esc(notebook.title)}</div><h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">${esc(page.title)}</h1><div class="page-date">Last edited just now · Private workspace</div></div><div class="page-switcher">${state.pages.map(p=>`<button class="page-chip ${p.id===state.page.id?"active":""}" data-page="${p.id}">${esc(p.title)}</button>`).join("")}<button class="page-chip add-page" id="add-page-chip">＋ Page</button></div><nav class="view-tabs"><button class="view-tab ${state.view==="notebook"?"active":""}" data-view="notebook">▤ &nbsp;Notebook</button><button class="view-tab ${state.view==="canvas"?"active":""}" data-view="canvas">▦ &nbsp;Canvas <span style="color:var(--muted)">(${state.items.length})</span></button></nav><div id="view-content"></div></section></main></div><div id="settings-root"></div><div id="toast"></div>`;
+  $("#app").innerHTML=`<div class="app-shell"><aside class="sidebar"><div class="brand"><div class="brand-mark">N</div><div><div class="brand-name">Notebook Canvas</div><div class="brand-sub">YOUR DIGITAL SPACE</div></div></div><div class="side-actions"><button class="btn small primary" id="new-note">＋ <span>Notebook</span></button><button class="btn small" id="new-page">▤ <span>Page</span></button></div><input class="search" id="search-notes" placeholder="⌕  Search notebooks…" /><div class="side-label">YOUR NOTEBOOKS</div><div class="note-list" id="note-list"></div><div class="side-bottom"><div class="avatar">${esc((state.user.email||"N").slice(0,1).toUpperCase())}</div><div class="user-meta"><div style="font-size:12px;font-weight:600">Your workspace</div><div class="user-email">${esc(state.user.email)}</div></div><button class="btn icon ghost" id="settings" title="Appearance">⚙</button><button class="btn icon ghost" id="sign-out" title="Sign out">↗</button></div></aside><main class="main"><header class="topbar"><div class="breadcrumbs"><span>Workspace</span><span>／</span><span class="crumb-title">${esc(notebook.title)}</span><span>／</span><span>${esc(page.title)}</span></div><span class="save-status" id="save-status">All changes saved</span><div class="top-actions"><button class="btn small optional" id="rename-note">Rename</button><button class="btn small" id="open-settings">◐ Theme</button><button class="btn small" id="add-note">＋ Add note</button><button class="btn small primary" id="add-assets">＋ Add files</button><input id="asset-input" type="file" multiple hidden accept="image/*,.pdf,.txt,.md,.csv,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.zip" /></div></header><section class="workspace"><div class="page-head"><div class="page-kicker">NOTEBOOK / ${esc(notebook.title)}</div><h1 class="page-title" id="page-title" contenteditable="true" spellcheck="false">${esc(page.title)}</h1><div class="page-date">Last edited just now · Private workspace</div></div><div class="page-switcher">${state.pages.map(p=>`<button class="page-chip ${p.id===state.page.id?"active":""}" data-page="${p.id}">${esc(p.title)}</button>`).join("")}<button class="page-chip add-page" id="add-page-chip">＋ Page</button></div><nav class="view-tabs board-nav"><button class="view-tab active" data-view="canvas">▦ &nbsp;Board <span style="color:var(--muted)">(${state.items.length})</span></button><span class="board-nav-note">A space for notes, images and files</span></nav><div id="view-content"></div></section></main></div><div id="settings-root"></div><div id="toast"></div>`;
   renderNotebookList();renderView();wireApp();
 }
 function renderNotebookList(filter=""){const root=$("#note-list");if(!root)return;const items=state.notebooks.filter(n=>n.title.toLowerCase().includes(filter.toLowerCase()));root.innerHTML=items.length?items.map(n=>`<button class="note-row ${n.id===state.activeNotebook?.id?"active":""}" data-notebook="${n.id}" title="${esc(n.title)}"><span class="note-icon">▤</span><span class="note-title">${esc(n.title)}</span></button>`).join(""):'<div class="empty-state">No notebooks yet</div>';root.querySelectorAll("[data-notebook]").forEach(btn=>btn.onclick=()=>selectNotebook(btn.dataset.notebook));}
@@ -46,24 +46,68 @@ function runEditorCommand(cmd){if(!state.editor)return;const c=state.editor.chai
 function schedulePageSave(content){const pageId=state.page.id,ownerId=state.user.id;const pending=state.saveTimers.get(pageId);if(pending)clearTimeout(pending);if(state.page?.id===pageId)$("#save-status").textContent="Saving…";const timer=setTimeout(async()=>{const {error}=await supabase.from("notebook_pages").update({content}).eq("id",pageId).eq("owner_id",ownerId);state.saveTimers.delete(pageId);if(state.page?.id===pageId)$("#save-status").textContent=error?"Save failed":"All changes saved";if(error)notify(error.message);},650);state.saveTimers.set(pageId,timer);}
 async function saveCanvasItem(id,patch){const {error}=await supabase.from("canvas_items").update(patch).eq("id",id).eq("owner_id",state.user.id);if(error)notify(error.message);}
 async function signedUrl(path){if(state.signedUrls.has(path))return state.signedUrls.get(path);const {data,error}=await supabase.storage.from("notebook-assets").createSignedUrl(path,3600);if(error)throw error;state.signedUrls.set(path,data.signedUrl);return data.signedUrl;}
-async function renderCanvas(){
+async async function createStickyNote(){
+  const count=state.items.filter(item=>item.kind==="sticky").length;
+  const palette=["violet","graphite","slate"];
+  const metadata={body:"",tone:palette[count%palette.length]};
+  const {data,error}=await supabase.from("canvas_items").insert({
+    page_id:state.page.id,owner_id:state.user.id,kind:"sticky",
+    title:"Untitled note",metadata,
+    position:{x:90+(count%4)*38,y:90+(count%5)*34,width:300,height:250},
+    z_index:Math.max(0,...state.items.map(i=>i.z_index||0))+1
+  }).select().single();
+  if(error){notify(error.message);return;}
+  state.items.push(data);state.selected=data.id;renderCanvas();
+  requestAnimationFrame(()=>{const field=$(`[data-id="${data.id}"] .sticky-title`);field?.focus();field?.select();});
+}
+async function saveSticky(item,patch){
+  const {error}=await supabase.from("canvas_items").update(patch).eq("id",item.id).eq("owner_id",state.user.id);
+  if(error)notify(error.message);
+  else Object.assign(item,patch);
+}
+function renderCanvas(){
   const root=$("#view-content");if(!root)return;
-  root.innerHTML=`<div class="canvas-toolbar"><div style="color:var(--muted);font-size:12px">Move objects freely. Select an item to resize, rotate or change its layer.</div><div style="display:flex;gap:6px"><button class="btn small" id="fit-board">Center board</button><button class="btn small primary" id="canvas-upload">＋ Upload</button></div></div><div class="canvas-board" id="canvas-board"><div class="canvas-empty" id="canvas-empty" style="${state.items.length?"display:none":""}"><div><strong>Your canvas is open.</strong><br><span>Drop images and files here, or use Upload.</span></div></div><div style="position:relative;width:1800px;height:1100px" id="canvas-plane"></div></div>`;
-  $("#canvas-upload").onclick=()=>$("#asset-input").click();$("#fit-board").onclick=()=>$("#canvas-board").scrollTo({left:0,top:0,behavior:"smooth"});
+  root.innerHTML=`<div class="board-toolbar"><div class="board-hint"><span class="board-kicker">YOUR BOARD</span><span>วางโน้ต รูปภาพ และไฟล์ได้อย่างอิสระ ลากเพื่อจัดตำแหน่งได้เลย</span></div><div class="board-actions"><span class="board-count">${state.items.length} ITEMS</span><button class="btn small" id="fit-board">Center board</button><button class="btn small" id="canvas-upload">＋ Add files</button><button class="btn small primary" id="canvas-add-note">＋ New note</button></div></div><div class="canvas-board" id="canvas-board"><div class="canvas-empty" id="canvas-empty" style="${state.items.length?"display:none":""}"><div><strong>Your board is ready.</strong><br><span>เริ่มจากสร้างโน้ต หรือวางรูปภาพและไฟล์ลงบนบอร์ด</span></div></div><div class="canvas-plane" id="canvas-plane"></div></div>`;
+  $("#canvas-upload").onclick=()=>$("#asset-input").click();
+  $("#canvas-add-note").onclick=createStickyNote;
+  $("#fit-board").onclick=()=>$("#canvas-board").scrollTo({left:0,top:0,behavior:"smooth"});
   const plane=$("#canvas-plane");
-  for(const item of state.items){const p=item.position||{x:80,y:80,width:320,height:220};const el=document.createElement("div");el.className="asset"+(item.id===state.selected?" selected":"");el.dataset.id=item.id;el.style.cssText=`left:${p.x||0}px;top:${p.y||0}px;width:${p.width||320}px;height:${p.height||220}px;transform:rotate(${item.rotation||0}deg);z-index:${item.z_index||1}`;
+  for(const item of state.items){
+    const p=item.position||{x:80,y:80,width:320,height:220};
+    const el=document.createElement("div");
+    el.className="asset"+(item.kind==="sticky"?" sticky-asset":"")+(item.id===state.selected?" selected":"");
+    el.dataset.id=item.id;
+    el.style.cssText=`left:${p.x||0}px;top:${p.y||0}px;width:${p.width||320}px;height:${p.height||220}px;transform:rotate(${item.rotation||0}deg);z-index:${item.z_index||1}`;
     let inside="";
-    if(item.kind==="image"){try{inside=`<img alt="${esc(item.title)}" src="${await signedUrl(item.storage_path)}" draggable="false">`;}catch{inside='<div class="asset-file">Image unavailable</div>';}}
-    else if(item.kind==="pdf"){inside=`<div class="asset-file"><div class="file-icon">▤</div><strong>${esc(item.title)}</strong><small>PDF DOCUMENT</small></div>`;}
-    else {inside=`<div class="asset-file"><div class="file-icon">↧</div><strong>${esc(item.title)}</strong><small>${esc(item.metadata?.sizeLabel||"FILE")}</small></div>`;}
+    if(item.kind==="sticky"){
+      const tone=["violet","graphite","slate"].includes(item.metadata?.tone)?item.metadata.tone:"graphite";
+      inside=`<div class="sticky-note tone-${tone}"><div class="sticky-cap"><span>NOTE / ${String(item.id).slice(0,4).toUpperCase()}</span><span class="sticky-cap-dot"></span></div><input class="sticky-title" aria-label="Note title" maxlength="120" value="${esc(item.title||"Untitled note")}" /><textarea class="sticky-content" aria-label="Note content" placeholder="เขียนไอเดียของคุณตรงนี้...">${esc(item.metadata?.body||"")}</textarea><div class="sticky-foot"><span>QUICK NOTE</span><span>PRIVATE</span></div></div>`;
+    }else if(item.kind==="image"){
+      try{inside=`<img alt="${esc(item.title)}" src="${await signedUrl(item.storage_path)}" draggable="false">`;}
+      catch{inside='<div class="asset-file">Image unavailable</div>';}
+    }else if(item.kind==="pdf"){
+      inside=`<div class="asset-file"><div class="file-icon">▤</div><strong>${esc(item.title)}</strong><small>PDF DOCUMENT</small></div>`;
+    }else{
+      inside=`<div class="asset-file"><div class="file-icon">↧</div><strong>${esc(item.title)}</strong><small>${esc(item.metadata?.sizeLabel||"FILE")}</small></div>`;
+    }
     el.innerHTML=`${inside}<div class="asset-controls"><button data-act="rotate" title="Rotate">↻</button><button data-act="front" title="Bring forward">＋</button><button data-act="back" title="Send backward">－</button><button data-act="delete" title="Delete">×</button></div><div class="resize-handle"></div>`;
-    plane.append(el);wireAsset(el,item);
+    plane.append(el);
+    if(item.kind==="sticky"){
+      const title=el.querySelector(".sticky-title"),body=el.querySelector(".sticky-content");
+      title.onchange=async()=>{item.title=title.value.trim()||"Untitled note";await saveSticky(item,{title:item.title});};
+      body.onchange=async()=>{const metadata={...(item.metadata||{}),body:body.value};await saveSticky(item,{metadata});};
+      title.onfocus=body.onfocus=()=>{state.selected=item.id;el.classList.add("selected");};
+    }
+    wireAsset(el,item);
   }
-  const board=$("#canvas-board");board.ondragover=e=>{e.preventDefault();};board.ondrop=async e=>{e.preventDefault();if(e.dataTransfer.files.length)await uploadFiles(e.dataTransfer.files,20,20);};
+  const board=$("#canvas-board");
+  board.ondragover=e=>{e.preventDefault();board.classList.add("drag-over");};
+  board.ondragleave=()=>board.classList.remove("drag-over");
+  board.ondrop=async e=>{e.preventDefault();board.classList.remove("drag-over");if(e.dataTransfer.files.length)await uploadFiles(e.dataTransfer.files,20,20);};
   board.onclick=e=>{if(e.target===board||e.target.id==="canvas-plane"){state.selected=null;renderCanvas();}};
 }
 function wireAsset(el,item){
-  el.onpointerdown=e=>{if(e.target.closest("button")||e.target.classList.contains("resize-handle"))return;state.selected=item.id;el.classList.add("selected");el.style.zIndex="9999";const startX=e.clientX,startY=e.clientY,p={...(item.position||{})};el.setPointerCapture(e.pointerId);const move=ev=>{const zoom=1;el.style.left=(p.x+ev.clientX-startX)/zoom+"px";el.style.top=(p.y+ev.clientY-startY)/zoom+"px";};const up=async ev=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);const pos={...p,x:Math.max(0,(p.x||0)+ev.clientX-startX),y:Math.max(0,(p.y||0)+ev.clientY-startY)};item.position=pos;await saveCanvasItem(item.id,{position:pos});};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);};
+  el.onpointerdown=e=>{if(e.target.closest("button,input,textarea")||e.target.classList.contains("resize-handle"))return;state.selected=item.id;el.classList.add("selected");el.style.zIndex="9999";const startX=e.clientX,startY=e.clientY,p={...(item.position||{})};el.setPointerCapture(e.pointerId);const move=ev=>{const zoom=1;el.style.left=(p.x+ev.clientX-startX)/zoom+"px";el.style.top=(p.y+ev.clientY-startY)/zoom+"px";};const up=async ev=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);const pos={...p,x:Math.max(0,(p.x||0)+ev.clientX-startX),y:Math.max(0,(p.y||0)+ev.clientY-startY)};item.position=pos;await saveCanvasItem(item.id,{position:pos});};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);};
   el.querySelector(".resize-handle").onpointerdown=e=>{e.stopPropagation();e.preventDefault();state.selected=item.id;const sx=e.clientX,sy=e.clientY,p={...(item.position||{})};el.setPointerCapture(e.pointerId);const move=ev=>{el.style.width=Math.max(120,(p.width||320)+ev.clientX-sx)+"px";el.style.height=Math.max(100,(p.height||220)+ev.clientY-sy)+"px";};const up=async ev=>{el.removeEventListener("pointermove",move);el.removeEventListener("pointerup",up);const pos={...p,width:Math.max(120,(p.width||320)+ev.clientX-sx),height:Math.max(100,(p.height||220)+ev.clientY-sy)};item.position=pos;await saveCanvasItem(item.id,{position:pos});};el.addEventListener("pointermove",move);el.addEventListener("pointerup",up);};
   el.querySelectorAll("[data-act]").forEach(btn=>btn.onclick=async e=>{e.stopPropagation();const act=btn.dataset.act;if(act==="delete"){const ok=confirm("Remove this item from the canvas?");if(!ok)return;if(item.storage_path)await supabase.storage.from("notebook-assets").remove([item.storage_path]);await supabase.from("canvas_items").delete().eq("id",item.id);state.items=state.items.filter(i=>i.id!==item.id);state.selected=null;renderCanvas();}else if(act==="rotate"){item.rotation=((Number(item.rotation)||0)+15)%360;await saveCanvasItem(item.id,{rotation:item.rotation});renderCanvas();}else{const max=Math.max(0,...state.items.map(i=>i.z_index||0));item.z_index=act==="front"?max+1:Math.min(0,...state.items.map(i=>i.z_index||0))-1;await saveCanvasItem(item.id,{z_index:item.z_index});renderCanvas();}});
 }
@@ -71,10 +115,18 @@ async function uploadFiles(fileList,startX=70,startY=70){const files=[...fileLis
 function formatBytes(bytes){if(bytes<1024)return bytes+" B";if(bytes<1048576)return (bytes/1024).toFixed(1)+" KB";return (bytes/1048576).toFixed(1)+" MB";}
 function openSettings(){state.settingsOpen=!state.settingsOpen;const root=$("#settings-root");if(!state.settingsOpen){root.innerHTML="";return;}root.innerHTML=`<div class="settings-panel"><h3>Appearance</h3><div style="font-size:11px;color:var(--muted);margin-bottom:8px">Choose a quiet workspace tone</div>${themes.map(t=>`<button class="theme-option" data-theme="${t[0]}"><span class="theme-dot" style="background:${t[2]}"></span>${t[1]}${state.theme===t[0]?"　✓":""}</button>`).join("")}</div>`;root.querySelectorAll("[data-theme]").forEach(btn=>btn.onclick=async()=>{applyTheme(btn.dataset.theme);await supabase.from("profiles").upsert({id:state.user.id,preferences:{theme:state.theme,accent:"gray"}});openSettings();});}
 function wireApp(){
-  $("#new-note").onclick=()=>createNotebook();$("#new-page").onclick=createPage;$("#add-page-chip").onclick=createPage;$$("[data-page]").forEach(btn=>btn.onclick=()=>selectPage(btn.dataset.page));$("#search-notes").oninput=e=>renderNotebookList(e.target.value);
-  $("#add-assets").onclick=()=>$("#asset-input").click();$("#asset-input").onchange=e=>uploadFiles(e.target.files);$("#settings").onclick=openSettings;$("#open-settings").onclick=openSettings;$("#sign-out").onclick=async()=>{await supabase.auth.signOut();state.user=null;authView();};$("#rename-note").onclick=async()=>{const title=prompt("Notebook name",state.activeNotebook.title);if(!title?.trim())return;const {error}=await supabase.from("notebooks").update({title:title.trim()}).eq("id",state.activeNotebook.id);if(error)notify(error.message);else{state.activeNotebook.title=title.trim();const n=state.notebooks.find(n=>n.id===state.activeNotebook.id);if(n)n.title=title.trim();renderApp();}};
-  $("#page-title").onblur=async e=>{const title=e.target.textContent.trim()||"Untitled page";state.page.title=title;const {error}=await supabase.from("notebook_pages").update({title}).eq("id",state.page.id);if(error)notify(error.message);else{$(".breadcrumbs .crumb-title").textContent=state.activeNotebook.title;}};
-  $$(".view-tab").forEach(tab=>tab.onclick=()=>{state.view=tab.dataset.view;$$(".view-tab").forEach(t=>t.classList.toggle("active",t===tab));renderView();});
+  $("#new-note").onclick=()=>createNotebook();
+  $("#new-page").onclick=createPage;
+  $("#add-page-chip").onclick=createPage;
+  $$("[data-page]").forEach(btn=>btn.onclick=()=>selectPage(btn.dataset.page));
+  $("#search-notes").oninput=e=>renderNotebookList(e.target.value);
+  $("#add-note").onclick=createStickyNote;
+  $("#add-assets").onclick=()=>$("#asset-input").click();
+  $("#asset-input").onchange=e=>uploadFiles(e.target.files);
+  $("#settings").onclick=openSettings;$("#open-settings").onclick=openSettings;
+  $("#sign-out").onclick=async()=>{await supabase.auth.signOut();state.user=null;authView();};
+  $("#rename-note").onclick=async()=>{const title=prompt("Notebook name",state.activeNotebook.title);if(!title?.trim())return;const {error}=await supabase.from("notebooks").update({title:title.trim()}).eq("id",state.activeNotebook.id);if(error)notify(error.message);else{state.activeNotebook.title=title.trim();const n=state.notebooks.find(n=>n.id===state.activeNotebook.id);if(n)n.title=title.trim();renderApp();}};
+  $("#page-title").onblur=async e=>{const title=e.target.textContent.trim()||"Untitled page";state.page.title=title;const {error}=await supabase.from("notebook_pages").update({title}).eq("id",state.page.id);if(error)notify(error.message);else $(".breadcrumbs .crumb-title").textContent=state.activeNotebook.title;};
   $("#settings-root").onclick=e=>{if(e.target.id==="settings-root"){state.settingsOpen=false;e.currentTarget.innerHTML="";}};
 }
 async function start(){const {data:{session}}=await supabase.auth.getSession();if(!session){authView();return;}state.user=session.user;await ensureProfile();await loadWorkspace();}
