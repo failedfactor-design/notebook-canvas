@@ -5,7 +5,7 @@ import StarterKit from "https://esm.sh/@tiptap/starter-kit@3.34.0";
 const $ = (s, root=document) => root.querySelector(s);
 const esc = (value="") => String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
 const icon = (symbol) => symbol;
-const state = { user:null, notebooks:[], activeNotebook:null, pages:[], page:null, items:[], view:"notebook", editor:null, selected:null, saveTimer:null, theme:"graphite", settingsOpen:false, signedUrls:new Map() };
+const state = { user:null, notebooks:[], activeNotebook:null, pages:[], page:null, items:[], view:"notebook", editor:null, selected:null, saveTimer:null, saveTimers:new Map(), theme:"graphite", settingsOpen:false, signedUrls:new Map() };
 const themes = [
   ["graphite","Graphite","#41464e"],["charcoal","Charcoal","#191b1e"],["midnight","Midnight","#202d3c"],["fog","Fog","#777e86"],["paper","Paper","#f0f0eb"]
 ];
@@ -43,7 +43,7 @@ function renderView(){
 }
 function $$(s,root=document){return [...root.querySelectorAll(s)];}
 function runEditorCommand(cmd){if(!state.editor)return;const c=state.editor.chain().focus();const commands={bold:()=>c.toggleBold().run(),italic:()=>c.toggleItalic().run(),strike:()=>c.toggleStrike().run(),h1:()=>c.toggleHeading({level:1}).run(),h2:()=>c.toggleHeading({level:2}).run(),paragraph:()=>c.setParagraph().run(),bullet:()=>c.toggleBulletList().run(),ordered:()=>c.toggleOrderedList().run(),quote:()=>c.toggleBlockquote().run(),code:()=>c.toggleCodeBlock().run(),undo:()=>c.undo().run(),redo:()=>c.redo().run()};commands[cmd]?.();}
-function schedulePageSave(content){clearTimeout(state.saveTimer);$("#save-status").textContent="Saving…";state.saveTimer=setTimeout(async()=>{const {error}=await supabase.from("notebook_pages").update({content}).eq("id",state.page.id).eq("owner_id",state.user.id);$("#save-status").textContent=error?"Save failed":"All changes saved";if(error)notify(error.message);},650);}
+function schedulePageSave(content){const pageId=state.page.id,ownerId=state.user.id;const pending=state.saveTimers.get(pageId);if(pending)clearTimeout(pending);if(state.page?.id===pageId)$("#save-status").textContent="Saving…";const timer=setTimeout(async()=>{const {error}=await supabase.from("notebook_pages").update({content}).eq("id",pageId).eq("owner_id",ownerId);state.saveTimers.delete(pageId);if(state.page?.id===pageId)$("#save-status").textContent=error?"Save failed":"All changes saved";if(error)notify(error.message);},650);state.saveTimers.set(pageId,timer);}
 async function saveCanvasItem(id,patch){const {error}=await supabase.from("canvas_items").update(patch).eq("id",id).eq("owner_id",state.user.id);if(error)notify(error.message);}
 async function signedUrl(path){if(state.signedUrls.has(path))return state.signedUrls.get(path);const {data,error}=await supabase.storage.from("notebook-assets").createSignedUrl(path,3600);if(error)throw error;state.signedUrls.set(path,data.signedUrl);return data.signedUrl;}
 async function renderCanvas(){
