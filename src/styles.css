@@ -493,3 +493,5 @@ body{background:radial-gradient(ellipse at 82% -20%,rgba(132,117,184,.12),transp
   .canvas-plane.freeform-plane{width:1900px;height:1800px;min-width:1900px;min-height:1800px}
   .page-doc-tile.freeform-page-card{width:340px;height:520px}
 }
+
+.asset.freeform-asset .resize-handle{right:7px;bottom:7px}
