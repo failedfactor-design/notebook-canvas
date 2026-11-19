@@ -237,3 +237,83 @@ body{background:radial-gradient(ellipse at 82% -20%,rgba(132,117,184,.12),transp
  .canvas-board{height:66vh;min-height:460px}
  .canvas-plane{width:1800px;height:1200px;min-width:1800px;min-height:1200px}
 }
+
+
+/* Grid board layout */
+.canvas-board.grid-board{
+  height:auto;min-height:0;overflow:visible;margin:0 auto;
+  border:0;border-radius:0;background:transparent;box-shadow:none;
+}
+.canvas-board.grid-board .canvas-empty{
+  position:relative;min-height:230px;height:auto;display:grid;
+  border:1px dashed #414752;border-radius:16px;
+  background:linear-gradient(145deg,#1b1f25,#171a1f);
+  margin-bottom:14px;
+}
+.canvas-board.grid-board .canvas-empty[style*="display:none"]{display:none!important}
+.canvas-plane.board-grid{
+  position:relative;width:100%;height:auto;min-width:0;min-height:0;
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(min(255px,100%),1fr));
+  gap:14px;align-items:stretch;
+}
+.asset.grid-tile{
+  position:relative!important;left:auto!important;top:auto!important;
+  width:100%!important;height:286px!important;min-width:0;
+  transform:none!important;z-index:auto!important;overflow:hidden;
+  border:1px solid #343b45;border-radius:15px;
+  background:linear-gradient(155deg,#22272e,#1b2026);
+  box-shadow:0 9px 26px rgba(0,0,0,.22);
+  cursor:default;transition:transform .16s,border-color .16s,box-shadow .16s;
+}
+.asset.grid-tile:hover{
+  transform:translateY(-2px)!important;border-color:#59616e;
+  box-shadow:0 15px 34px rgba(0,0,0,.3);
+}
+.asset.grid-tile.selected{outline:1px solid #b3a6f4;outline-offset:1px}
+.asset.grid-tile .asset-controls{top:9px;right:9px;opacity:0;display:flex;pointer-events:none;transition:opacity .15s}
+.asset.grid-tile:hover .asset-controls,.asset.grid-tile.selected .asset-controls,
+.asset.grid-tile:focus-within .asset-controls{opacity:1;pointer-events:auto}
+.asset.grid-tile .asset-controls button{
+  height:27px;min-width:27px;padding:0 7px;border-radius:8px;
+  background:rgba(24,27,33,.93);border-color:#505966;color:#e8e8f0;
+}
+.asset.grid-tile .asset-controls button:hover{background:#3c3a4a;border-color:#9586cc}
+.asset.grid-tile .resize-handle{display:none}
+.asset.grid-tile.tile-note{height:286px!important;overflow:hidden}
+.asset.grid-tile .sticky-note{height:100%;min-height:0;width:100%;border:0;border-radius:14px;padding:17px 17px 13px}
+.asset.grid-tile .sticky-content{min-height:60px}
+.asset.grid-tile.tile-image{display:flex;flex-direction:column}
+.tile-media{flex:1;min-height:0;overflow:hidden;background:#15191e}
+.tile-media img{display:block;width:100%;height:100%;object-fit:cover;border-radius:0;pointer-events:none}
+.tile-file-icon{color:#b5a7ff;font-size:38px;display:grid;place-items:center}
+.tile-meta{
+  min-height:55px;padding:10px 13px;display:flex;align-items:center;
+  justify-content:space-between;gap:12px;border-top:1px solid #ffffff0d;
+  background:rgba(25,29,35,.96)
+}
+.tile-meta strong{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:11px;color:#e3e6ed;font-weight:600}
+.tile-meta span{flex:0 0 auto;color:#8e96a3;font:700 8px Manrope;letter-spacing:1px}
+.tile-file-body{
+  height:calc(100% - 55px);display:flex;flex-direction:column;
+  align-items:center;justify-content:center;gap:10px;padding:20px;
+  background:radial-gradient(ellipse at 50% 30%,#36324855,transparent 60%)
+}
+.tile-file-body strong{max-width:100%;text-align:center;overflow-wrap:anywhere;color:#e5e7ee;font-size:12px}
+.tile-file-body small{font:600 9px Manrope;letter-spacing:.9px;color:#87909e}
+.canvas-board.grid-board.drag-over .board-grid{outline:2px dashed #a99aff;outline-offset:7px;border-radius:14px}
+@media(max-width:900px){
+  .canvas-plane.board-grid{grid-template-columns:repeat(auto-fill,minmax(min(220px,100%),1fr));gap:12px}
+}
+@media(max-width:580px){
+  .canvas-plane.board-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:9px}
+  .asset.grid-tile,.asset.grid-tile.tile-note{height:250px!important;border-radius:12px}
+  .asset.grid-tile .sticky-note{padding:13px 12px 10px}
+  .asset.grid-tile .sticky-title{font-size:13px}
+  .asset.grid-tile .sticky-content{font-size:11px}
+  .asset.grid-tile .asset-controls{top:6px;right:6px}
+  .tile-meta{padding:8px 9px;min-height:47px}
+  .tile-meta strong{font-size:10px}
+}
+@media(max-width:380px){
+  .canvas-plane.board-grid{grid-template-columns:1fr}
+}
