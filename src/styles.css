@@ -347,3 +347,149 @@ body{background:radial-gradient(ellipse at 82% -20%,rgba(132,117,184,.12),transp
  .page-doc-tile{height:250px;padding:12px;border-radius:12px}
  .page-board-prose{font-size:11px}
 }
+
+
+/* User-requested freeform board: separate movable note and file cards */
+.canvas-board.freeform-board{
+  height:min(76vh,920px);min-height:570px;overflow:auto;
+  border:1px solid #303741;border-radius:17px;
+  background-color:#171b20;
+  background-image:radial-gradient(rgba(169,174,190,.19) .8px,transparent .8px),radial-gradient(ellipse at 50% 0%,rgba(151,139,191,.08),transparent 60%);
+  background-size:24px 24px,100% 100%;
+}
+.canvas-plane.freeform-plane{
+  position:relative;display:block;width:2600px;height:2100px;
+  min-width:2600px;min-height:2100px;
+}
+.asset.freeform-asset{
+  position:absolute!important;display:flex;flex-direction:column;
+  min-width:190px;min-height:150px;overflow:hidden;
+  border:1px solid #3c424d;border-radius:14px;
+  background:linear-gradient(155deg,#242932,#1b2026);
+  box-shadow:0 13px 35px rgba(0,0,0,.34);
+  cursor:default;touch-action:auto;
+}
+.asset.freeform-asset:hover{border-color:#626b78;box-shadow:0 16px 40px rgba(0,0,0,.42)}
+.asset.freeform-asset.selected{
+  outline:2px solid rgba(181,167,255,.86);outline-offset:2px;
+  box-shadow:0 18px 46px rgba(0,0,0,.48),0 0 0 5px rgba(181,167,255,.08);
+}
+.asset-drag-handle{
+  cursor:grab;touch-action:none;user-select:none;
+}
+.asset-drag-handle:active{cursor:grabbing}
+.asset.freeform-asset .asset-controls{
+  top:7px;right:8px;display:flex;opacity:0;pointer-events:none;
+  transition:opacity .14s;z-index:6;
+}
+.asset.freeform-asset:hover .asset-controls,
+.asset.freeform-asset.selected .asset-controls{opacity:1;pointer-events:auto}
+.asset.freeform-asset .asset-controls button{
+  height:27px;min-width:27px;padding:0 7px;
+  border:1px solid #505966;border-radius:8px;
+  background:rgba(24,27,33,.96);color:#eceaf4;
+}
+.asset.freeform-asset .asset-controls button:hover{background:#3c3a4a;border-color:#9586cc}
+.asset.freeform-asset .resize-handle{display:block;opacity:0;pointer-events:none}
+.asset.freeform-asset.selected .resize-handle{opacity:1;pointer-events:auto}
+.asset.freeform-asset.sticky-asset{overflow:hidden}
+.asset.freeform-asset .sticky-note{width:100%;height:100%;min-height:0;border:0;border-radius:13px;padding:15px 16px 12px}
+.asset.freeform-asset .sticky-cap{gap:8px;min-height:18px}
+.drag-label{margin-left:auto;color:#87909e;font:700 8px Manrope;letter-spacing:.9px}
+.asset.freeform-asset .sticky-title{font-size:15px}
+.asset.freeform-asset .sticky-content{min-height:50px}
+.asset.freeform-asset .media-card-head{
+  min-height:36px;flex:0 0 36px;display:flex;align-items:center;
+  gap:8px;padding:0 12px;border-bottom:1px solid #ffffff0d;
+  color:#b9afff;font:700 8px Manrope;letter-spacing:1.1px;
+  background:rgba(18,21,26,.35);
+}
+.asset.freeform-asset .media-preview{
+  flex:1;min-height:0;position:relative;overflow:hidden;
+  background:#15191e;display:flex;align-items:center;justify-content:center;
+}
+.asset.freeform-asset .image-preview img{
+  display:block;width:100%;height:100%;max-height:100%;object-fit:contain;
+  border-radius:0;pointer-events:none;background:#111419;
+}
+.asset.freeform-asset .file-preview{background:#161a20}
+.asset.freeform-asset .pdf-preview{
+  width:100%;height:100%;min-height:180px;border:0;background:#fff;
+}
+.asset.freeform-asset .text-file-preview{
+  width:100%;height:100%;overflow:auto;margin:0;padding:13px;
+  white-space:pre-wrap;overflow-wrap:anywhere;
+  color:#cbd1dc;background:#171b21;
+  font:10px/1.55 ui-monospace,SFMono-Regular,Consolas,monospace;
+}
+.asset.freeform-asset .preview-fallback{
+  min-height:100%;width:100%;display:flex;flex-direction:column;
+  justify-content:center;align-items:center;gap:7px;
+  color:#b6a9ff;font:700 28px Manrope;
+  background:radial-gradient(ellipse at 50% 45%,#39344b55,transparent 65%);
+}
+.asset.freeform-asset .preview-fallback small{
+  color:#818b98;font:500 10px 'IBM Plex Sans Thai',sans-serif;
+}
+.asset.freeform-asset .file-type-mark{
+  display:grid;place-items:center;min-width:55px;height:55px;
+  padding:0 8px;border:1px solid #55516a;border-radius:12px;
+  background:#282837;color:#c5baff;font:800 13px Manrope;
+}
+.asset.freeform-asset .media-card-foot{
+  flex:0 0 auto;min-height:42px;display:flex;align-items:center;
+  justify-content:space-between;gap:10px;padding:8px 11px;
+  border-top:1px solid #ffffff0d;background:#20252c;
+}
+.asset.freeform-asset .media-card-foot strong{
+  min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+  color:#e3e6ed;font-size:11px;font-weight:600;
+}
+.asset.freeform-asset .media-card-foot a{
+  flex:0 0 auto;color:#b9afff;font-size:10px;text-decoration:none;
+}
+.asset.freeform-asset .media-card-foot a:hover{text-decoration:underline}
+.page-doc-tile.freeform-page-card{
+  position:absolute;left:55px;top:620px;
+  width:430px;height:590px;z-index:2;
+  display:flex;flex-direction:column;overflow:hidden;
+  border:1px solid #3b424d;border-radius:15px;
+  background:linear-gradient(155deg,#242932,#1b2026);
+  box-shadow:0 13px 35px rgba(0,0,0,.34);
+}
+.page-doc-tile.freeform-page-card .page-doc-head{
+  flex:0 0 39px;min-height:39px;margin:0;padding:0 14px;
+  display:flex;align-items:center;justify-content:space-between;
+  border-bottom:1px solid #ffffff10;color:#b9afff;
+  font:700 8px Manrope;letter-spacing:1.1px;
+  background:rgba(18,21,26,.35);
+}
+.page-doc-tile.freeform-page-card .page-doc-editor{
+  flex:1;min-height:0;overflow:auto;padding:16px 18px;
+  scrollbar-width:thin;scrollbar-color:#444a56 transparent;
+}
+.page-doc-tile.freeform-page-card .page-board-prose{
+  min-height:100%;outline:0;color:#d8dce4;
+  font:400 12px/1.8 'IBM Plex Sans Thai',sans-serif;
+}
+.page-doc-tile.freeform-page-card .page-board-prose p{margin:0 0 10px}
+.page-doc-tile.freeform-page-card .page-board-prose h1,
+.page-doc-tile.freeform-page-card .page-board-prose h2,
+.page-doc-tile.freeform-page-card .page-board-prose h3{
+  font-family:Manrope,'IBM Plex Sans Thai';line-height:1.35;
+  color:#f0edf8;margin:14px 0 8px;
+}
+.page-doc-tile.freeform-page-card .page-board-prose h1{font-size:21px}
+.page-doc-tile.freeform-page-card .page-board-prose h2{font-size:17px}
+.page-doc-tile.freeform-page-card .page-board-prose h3{font-size:14px}
+.page-doc-tile.freeform-page-card .page-board-prose ul,
+.page-doc-tile.freeform-page-card .page-board-prose ol{padding-left:20px}
+.page-doc-tile.freeform-page-card .page-board-prose p.is-editor-empty:first-child:before{
+  content:"เขียนเนื้อหาของหน้านี้...";float:left;color:#777f8c;
+  pointer-events:none;height:0;
+}
+@media(max-width:700px){
+  .canvas-board.freeform-board{height:68vh;min-height:480px}
+  .canvas-plane.freeform-plane{width:1900px;height:1800px;min-width:1900px;min-height:1800px}
+  .page-doc-tile.freeform-page-card{width:340px;height:520px}
+}
