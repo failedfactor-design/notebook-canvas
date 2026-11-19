@@ -63,7 +63,9 @@ Open http://localhost:5173.
 
 ## Deployment
 
-The app is static and can be hosted on GitHub Pages or another static host. Configure the production and local authentication redirect URLs in Supabase Auth before using magic-link or password recovery flows. For GitHub Pages, use **Settings → Pages → Deploy from a branch → main → /(root)**.
+The app is static and can be hosted on GitHub Pages or another static host. Before the first deployment, open **Repository Settings → Pages** and set **Build and deployment → Source** to **GitHub Actions**. The workflow in `.github/workflows/deploy-pages.yml` then validates JavaScript and publishes the site after pushes to `main`. Configure the site's authentication redirect URLs in Supabase Auth before using password recovery or email confirmation links.
+
+**Repository visibility:** this repository is currently public. GitHub Pages sites are public too. The browser contains only the Supabase publishable key; notebook records and uploaded assets are still private behind Supabase authentication and RLS. Do not commit private keys, passwords, or user data.
 
 ## Future work
 
