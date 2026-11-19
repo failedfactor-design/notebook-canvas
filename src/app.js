@@ -1,6 +1,6 @@
 import { supabase } from "./supabase.js";
-import { Editor } from "https://esm.sh/@tiptap/core@2.11.5";
-import StarterKit from "https://esm.sh/@tiptap/starter-kit@2.11.5";
+import { Editor } from "https://esm.sh/@tiptap/core@3.34.0";
+import StarterKit from "https://esm.sh/@tiptap/starter-kit@3.34.0";
 
 const $ = (s, root=document) => root.querySelector(s);
 const esc = (value="") => String(value).replace(/[&<>"']/g, ch => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[ch]));
