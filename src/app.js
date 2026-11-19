@@ -82,7 +82,17 @@ async function renderCanvas(){
   $("#canvas-add-note").onclick=createStickyNote;
   const plane=$("#canvas-plane");
   const pageTile=document.createElement("article");
-  const pagePos=readPageCardPosition(state.page.id);
+  let pagePos=readPageCardPosition(state.page.id);
+  try{
+    const saved=localStorage.getItem(`notebook-canvas-page-card:${state.page.id}`);
+    if(!saved){
+      const overlapsOldCard=state.items.some(item=>{
+        const p=item.position||{x:80,y:80,width:310,height:240};
+        return p.x<485&&p.y<645&&(p.x+(p.width||310))>55&&(p.y+(p.height||240))>55;
+      });
+      if(overlapsOldCard)pagePos={x:55,y:680};
+    }
+  }catch{}
   pageTile.className="page-doc-tile freeform-page-card";
   pageTile.style.cssText=`left:${pagePos.x}px;top:${pagePos.y}px`;
   pageTile.innerHTML=`<div class="page-doc-head asset-drag-handle"><span>PAGE NOTE</span><span>DRAG TO MOVE</span></div><div id="board-page-editor" class="page-doc-editor"></div>`;
