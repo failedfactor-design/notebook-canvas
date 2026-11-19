@@ -117,18 +117,15 @@ function wireAsset(el,item){
       const {error}=await supabase.from("canvas_items").delete().eq("id",item.id).eq("owner_id",state.user.id);
       if(error){notify(error.message);return;}
       state.items=state.items.filter(i=>i.id!==item.id);state.selected=null;renderCanvas();
-    }else{
-      const sorted=[...state.items].sort((a,b)=>(a.z_index||0)-(b.z_index||0));
-      const index=sorted.findIndex(i=>i.id===item.id);
-      const target=act==="front"?sorted.length-1:0;
-      if(index===target)return;
-      sorted.splice(index,1);
-      if(act==="front")sorted.push(item);else sorted.unshift(item);
-      for(let i=0;i<sorted.length;i++){sorted[i].z_index=i+1;}
-      const {error}=await supabase.from("canvas_items").upsert(sorted.map(i=>({id:i.id,owner_id:state.user.id,z_index:i.z_index})),{onConflict:"id"});
-      if(error){notify(error.message);return;}
-      state.items=sorted;renderCanvas();
+      return;
     }
+    const max=Math.max(0,...state.items.map(i=>i.z_index||0));
+    const min=Math.min(0,...state.items.map(i=>i.z_index||0));
+    const next=act==="front"?max+1:min-1;
+    const {error}=await supabase.from("canvas_items").update({z_index:next}).eq("id",item.id).eq("owner_id",state.user.id);
+    if(error){notify(error.message);return;}
+    item.z_index=next;
+    renderCanvas();
   });
 }
 async function uploadFiles(fileList,startX=70,startY=70){const files=[...fileList];if(!files.length)return;let offset=0;for(const file of files){try{if(file.size>50*1024*1024)throw new Error(`${file.name} exceeds the 50 MB limit`);const ext=file.name.split(".").pop()?.toLowerCase();const kind=file.type.startsWith("image/")?"image":file.type==="application/pdf"||ext==="pdf"?"pdf":"file";const clean=file.name.replace(/[^a-zA-Z0-9._-]/g,"_").slice(0,100);const path=`${state.user.id}/${state.activeNotebook.id}/${crypto.randomUUID()}-${clean}`;const {error:uploadError}=await supabase.storage.from("notebook-assets").upload(path,file,{contentType:file.type||"application/octet-stream",upsert:false});if(uploadError)throw uploadError;const {data,error}=await supabase.from("canvas_items").insert({page_id:state.page.id,owner_id:state.user.id,kind,title:file.name,storage_path:path,position:{x:startX+offset*26,y:startY+offset*26,width:kind==="image"?300:260,height:kind==="image"?220:165},metadata:{mimeType:file.type,size:file.size,sizeLabel:formatBytes(file.size)}}).select().single();if(error){await supabase.storage.from("notebook-assets").remove([path]);throw error;}state.items.push(data);offset++;}catch(err){notify(err.message||"Upload failed");}}state.view="canvas";const tab=$('[data-view="canvas"]');$$(".view-tab").forEach(t=>t.classList.toggle("active",t.dataset.view==="canvas"));renderView();}
