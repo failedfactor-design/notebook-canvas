@@ -46,7 +46,7 @@ function runEditorCommand(cmd){if(!state.editor)return;const c=state.editor.chai
 function schedulePageSave(content){const pageId=state.page.id,ownerId=state.user.id;const pending=state.saveTimers.get(pageId);if(pending)clearTimeout(pending);if(state.page?.id===pageId)$("#save-status").textContent="Saving…";const timer=setTimeout(async()=>{const {error}=await supabase.from("notebook_pages").update({content}).eq("id",pageId).eq("owner_id",ownerId);state.saveTimers.delete(pageId);if(state.page?.id===pageId)$("#save-status").textContent=error?"Save failed":"All changes saved";if(error)notify(error.message);},650);state.saveTimers.set(pageId,timer);}
 async function saveCanvasItem(id,patch){const {error}=await supabase.from("canvas_items").update(patch).eq("id",id).eq("owner_id",state.user.id);if(error)notify(error.message);}
 async function signedUrl(path){if(state.signedUrls.has(path))return state.signedUrls.get(path);const {data,error}=await supabase.storage.from("notebook-assets").createSignedUrl(path,3600);if(error)throw error;state.signedUrls.set(path,data.signedUrl);return data.signedUrl;}
-async async function createStickyNote(){
+async function createStickyNote(){
   const count=state.items.filter(item=>item.kind==="sticky").length;
   const palette=["violet","graphite","slate"];
   const metadata={body:"",tone:palette[count%palette.length]};
